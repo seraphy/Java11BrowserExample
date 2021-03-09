@@ -1,5 +1,12 @@
 # Java11+OpenJFX+WebView実装例
 
+## これはなにか？
+
+OpenJDKのJava11とOpenJFX15を用いて、WebViewを使ったアプリケーションをモジュールとして実行する実験例である。
+
+モジュールとして配布物を作成する。また、``jlink`` によるモジュールを含むJREの最小ランタイムを生成する。
+
+
 ## ビルド方法
 
 openjdk11をmavenの実行環境にした上で、
@@ -40,13 +47,19 @@ https.protocolを指定しているのは、java11のbugでブラウザでhttps�
 (依存モジュールは1つのmodulesファイルに統合される。)
 
 ```shell
-jlink --module-path target/mods --add-modules java.base,javafx.base,javafx.controls,javafx.fxml,javafx.graphics,javafx.web,java11browser --output jre_min
+jlink --module-path target/mods --add-modules java.base,javafx.base,javafx.controls,javafx.fxml,javafx.graphics,javafx.web,java11browser --launcer java11browser=java11browser --output jre_min
 ```
 
 これで作成されたランタイムは、以下のように起動できる。
 
 ```shell
 jre_min/bin/java -m java11browser
+```
+
+もしくはランチャとなるモジュール起動のシェルスクリプトが生成されているため、コマンドでも起動できる。
+
+```shell
+jre_min/bin/java11browser
 ```
 
 依存しているモジュールを表示するためには、``jdeps`` を用いる。
@@ -62,6 +75,7 @@ $ jdeps --module-path target/mods --list-deps -recursive target/mods/java11brows
 ```
 
 ## SEE ALSO
+
 以前試したMaven + Java11 + OpenJFX の実験プロジェクト
 
 https://github.com/seraphy/JavaFX11ModuleExample
