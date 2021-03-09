@@ -5,9 +5,9 @@
 	<groupId>jp.seraphyware.example</groupId>
 	<artifactId>java11browser</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<junit.jupiter.version>5.5.2</junit.jupiter.version>
 		<main.module>java11browser</main.module>
 		<main.class>jp.seraphyware.example.Java11BrowserMain</main.class>
 	</properties>
@@ -18,6 +18,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.1</version>
 				<configuration>
+					<!-- Java11でビルド -->
 					<release>11</release>
 				</configuration>
 			</plugin>
@@ -30,6 +31,9 @@
 					<outputDirectory>${project.build.directory}/mods</outputDirectory>
 					<archive>
 						<manifest>
+							<!-- クラスパス形式の実行可能jar時のためにMANIFESTに依存jarのClass-Path追加 -->
+							<addClasspath>true</addClasspath>
+							<!-- モジュール時、クラスパスの実行可能jar時のいずれの場合でもエントリポイントとなる -->
 							<mainClass>${main.class}</mainClass>
 						</manifest>
 					</archive>
@@ -69,7 +73,7 @@
 					</dependency>
 				</dependencies>
 			</plugin>
-			<!-- Mavenからモジュールとして実行できるようにする。 https://www.mojohaus.org/exec-maven-plugin/examples/example-exec-for-java-programs.html 
+			<!-- Mavenからモジュールとして実行できるようにする。 https://www.mojohaus.org/exec-maven-plugin/examples/example-exec-for-java-programs.html
 				mvn package exec:exec -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -78,9 +82,12 @@
 				<configuration>
 					<executable>${java.home}/bin/java</executable>
 					<arguments>
+						<!-- WebViewのhttps通信時のJava11のバグのため -->
+						<argument>-Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2</argument>
 						<argument>-p</argument>
 						<modulepath />
 						<argument>-m</argument>
+						<!-- JARにmainClassを埋め込む状態ではないのでmainClassの指定は必要 -->
 						<argument>${main.module}/${main.class}</argument>
 					</arguments>
 				</configuration>
@@ -106,30 +113,6 @@
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-web</artifactId>
 			<version>15.0.1</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.5.7</version>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-			<version>${junit.jupiter.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-engine</artifactId>
-			<version>${junit.jupiter.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.platform</groupId>
-			<artifactId>junit-platform-launcher</artifactId>
-			<version>1.4.0</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

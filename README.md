@@ -24,6 +24,13 @@ mvn package exec:exec
 java11 -p target/mods -m java11browser -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2
 ```
 
+あるいは、依存jarのClass-Pathもマニフェストに追加しているため、クラスパス形式での実行可能jarとしても実行できる。
+
+```shell
+java11 -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2 -jar target/mods/java11browser-0.0.1-SNAPSHOT.jar
+```
+
+
 https.protocolを指定しているのは、java11のbugでブラウザでhttps通信中に「No PSK Available」というエラーがコンソールに出るため。(Java13以降なら出ないらしい。)
 
 

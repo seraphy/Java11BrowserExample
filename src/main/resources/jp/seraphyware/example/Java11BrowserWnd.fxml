@@ -7,13 +7,12 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.web.WebView?>
 
-
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <HBox spacing="5.0">
          <children>
             <TextField fx:id="txtUrl" HBox.hgrow="ALWAYS" />
-            <Button mnemonicParsing="false" onAction="#onBrowse" text="Browse" />
+            <Button defaultButton="true" mnemonicParsing="false" onAction="#onBrowse" text="Browse" />
          </children>
          <VBox.margin>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
@@ -22,7 +21,7 @@
       <WebView fx:id="webview" prefHeight="236.0" prefWidth="600.0" VBox.vgrow="ALWAYS" />
       <HBox alignment="CENTER_RIGHT">
          <children>
-            <Button mnemonicParsing="false" onAction="#onClose" prefWidth="70.0" text="Close" />
+            <Button cancelButton="true" mnemonicParsing="false" onAction="#onClose" prefWidth="70.0" text="Close" />
          </children>
          <VBox.margin>
             <Insets bottom="5.0" left="5.0" right="25.0" top="5.0" />
