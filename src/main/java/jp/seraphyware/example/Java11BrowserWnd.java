@@ -3,6 +3,7 @@ package jp.seraphyware.example;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 import javafx.fxml.FXML;
@@ -18,8 +19,31 @@ import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+/**
+ * WebViewをコンテンツとして持つウィンドウクラス
+ */
 public class Java11BrowserWnd implements Initializable {
 
+	/**
+	 * ウィンドウの開閉回数を通知するためのインターフェイス
+	 */
+	public interface WindowReferenceCounter {
+
+		/**
+		 * ウィンドウが開いた場合
+		 */
+		void addRef();
+
+		/**
+		 * ウィンドウが閉じた場合
+		 */
+		void release();
+	}
+
+
+	/**
+	 * ウィンドウ
+	 */
 	private Stage stg;
 
 	@FXML
@@ -32,8 +56,11 @@ public class Java11BrowserWnd implements Initializable {
 
 	private Stage owner;
 
-	public Java11BrowserWnd(Stage owner) {
+	private final WindowReferenceCounter refCounter;
+
+	public Java11BrowserWnd(Stage owner, WindowReferenceCounter refCounter) {
 		this.owner = owner;
+		this.refCounter = Objects.requireNonNull(refCounter);
 
 		FXMLLoader ldr = new FXMLLoader();
 		ldr.setController(this);
@@ -54,6 +81,13 @@ public class Java11BrowserWnd implements Initializable {
 		stg.setTitle(getClass().getSimpleName());
 		stg.setScene(new Scene(parent));
 		stg.setOnCloseRequest(evt -> onClose());
+		stg.showingProperty().addListener((self, old, showing) -> {
+			if (showing) {
+				refCounter.addRef();
+			} else {
+				refCounter.release();
+			}
+		});
 	}
 
 	public Stage getOwner() {
@@ -90,7 +124,8 @@ public class Java11BrowserWnd implements Initializable {
 		});
 
 		engine.setCreatePopupHandler(popupFeature -> {
-			Java11BrowserWnd child = new Java11BrowserWnd(stg);
+			// メニューバーがある場合は独立ウィンドウ、無い場合は子ウィンドウとする
+			Java11BrowserWnd child = new Java11BrowserWnd(popupFeature.hasMenu() ? null : stg, refCounter);
 			child.show();
 			return child.engine;
 		});

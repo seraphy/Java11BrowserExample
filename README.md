@@ -33,9 +33,36 @@ java11 -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2 -jar target/mods/java11browser-0.
 
 https.protocolを指定しているのは、java11のbugでブラウザでhttps通信中に「No PSK Available」というエラーがコンソールに出るため。(Java13以降なら出ないらしい。)
 
+## ランタイムの作成
+
+依存するモジュールが分かっている場合、以下のように``jlink``を使うことで、JREと依存モジュールを合わせたランタイムを生成できる。
+
+(依存モジュールは1つのmodulesファイルに統合される。)
+
+```shell
+jlink --module-path target/mods --add-modules java.base,javafx.base,javafx.controls,javafx.fxml,javafx.graphics,javafx.web,java11browser --output jre_min
+```
+
+これで作成されたランタイムは、以下のように起動できる。
+
+```shell
+jre_min/bin/java -m java11browser
+```
+
+依存しているモジュールを表示するためには、``jdeps`` を用いる。
+
+```shell
+$ jdeps --module-path target/mods --list-deps -recursive target/mods/java11browser-0.0.1-SNAPSHOT.jar
+   java.base
+   javafx.base
+   javafx.controls
+   javafx.fxml
+   javafx.graphics
+   javafx.web
+```
 
 ## SEE ALSO
-以前試したプロジェクト
+以前試したMaven + Java11 + OpenJFX の実験プロジェクト
 
 https://github.com/seraphy/JavaFX11ModuleExample
 
