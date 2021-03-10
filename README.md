@@ -1,4 +1,4 @@
-# Java11+OpenJFX+WebView実装例
+# Java11+OpenJFX+WebView実装例 [![Build Status](https://travis-ci.com/seraphy/Java11BrowserExample.svg?branch=master)](https://travis-ci.com/seraphy/Java11BrowserExample)
 
 ## これはなにか？
 
