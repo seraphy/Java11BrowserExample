@@ -74,6 +74,9 @@ $ jdeps --module-path target/mods --list-deps -recursive target/mods/java11brows
    javafx.web
 ```
 
+※ mavevのlinkプラグインを使うと、openjfxが展開するxxxEmptyという中身が空の自動モジュール名のjarが依存関係として含まれてしまいエラーとなる。
+現時点で回避方法はなさそうなので、antで明示的にjlinkを起動させている。
+
 ## SEE ALSO
 
 以前試したMaven + Java11 + OpenJFX の実験プロジェクト

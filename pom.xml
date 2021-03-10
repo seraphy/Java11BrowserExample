@@ -10,6 +10,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.module>java11browser</main.module>
 		<main.class>jp.seraphyware.example.Java11BrowserMain</main.class>
+		<releasedir>target/distribute</releasedir>
 	</properties>
 
 	<build>
@@ -91,6 +92,63 @@
 						<argument>${main.module}/${main.class}</argument>
 					</arguments>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<!--
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<delete>
+									<fileset dir="${project.build.directory}/mods">
+										<include name="javafx-*.jar" />
+										<exclude name="javafx-*-win.jar" />
+										<exclude name="javafx-*-mac.jar" />
+										<exclude name="javafx-*-linux.jar" />
+									</fileset>
+								</delete>
+							</target>
+						</configuration>
+					</execution>
+					 -->
+					<execution>
+						<!-- 明示的にjlinkを起動してモジュールを含むランタイムを生成する。
+						mavenのjlinkプラグインでは、openjfxの生成するxxxxEmptyという自動モジュールも依存関係として
+						認識してしまい、「jlinkでは自動モジュールは使用できません」というエラーになる。
+						-->
+						<id>jlink</id>
+						<phase>package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<delete dir="${releasedir}" />
+								<exec executable="${java.home}/bin/jlink" failonerror="true">
+									<arg value="--module-path" />
+									<arg value="${project.build.directory}/mods"/>
+									<arg value="--add-modules" />
+									<arg value="${main.module}" />
+									<arg value="--no-man-pages" />
+									<arg value="--no-header-files" />
+									<arg value="--verbose" />
+									<arg value="--output" />
+									<arg value="${releasedir}" />
+									<arg value="--launcher" />
+									<arg value="${main.module}=${main.module}" />
+								</exec>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
