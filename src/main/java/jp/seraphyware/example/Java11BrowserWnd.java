@@ -1,10 +1,14 @@
 package jp.seraphyware.example;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URL;
+import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -78,7 +82,7 @@ public class Java11BrowserWnd implements Initializable {
 		if (owner != null) {
 			stg.initOwner(owner);
 		}
-		stg.setTitle(getClass().getSimpleName());
+		stg.setTitle(getClass().getSimpleName() + "@" + getImplementationVersion());
 		stg.setScene(new Scene(parent));
 		stg.setOnCloseRequest(evt -> onClose());
 		stg.showingProperty().addListener((self, old, showing) -> {
@@ -88,6 +92,47 @@ public class Java11BrowserWnd implements Initializable {
 				refCounter.release();
 			}
 		});
+	}
+
+	/**
+	 * 指定したクラスを保持しているMETA-INF/MANIFEST.MF情報を取得する。
+	 * (jarまたはfileのいずれの場所にあっても取得可能である。)
+	 * @param cls クラス
+	 * @return 魔にフェススト
+	 * @throws IOException
+	 */
+	private static Manifest loadManifest(Class<?> cls) throws IOException {
+		// このクラスを格納しているjarの中のMANIFESTファイルを読み取る
+		URL res = cls.getResource(cls.getSimpleName() + ".class");
+		String s = res.toString();
+		res = new URL(s.substring(0, s.length() - (cls.getName() + ".class").length()) + "META-INF/MANIFEST.MF");
+		System.out.println("MANIFEST-URL=" + res);
+
+		Manifest mf = new Manifest();
+		try (InputStream is = res.openStream()) {
+			mf.read(is);
+		}
+
+		Attributes attrs = mf.getMainAttributes();
+		for (Map.Entry<Object, Object> entry : attrs.entrySet()) {
+			System.out.println(entry);
+		}
+
+		return mf;
+	}
+
+	private String getImplementationVersion() {
+		try {
+			Manifest mf = loadManifest(getClass());
+
+			// マニフェストの実装バージョンの取得
+			Attributes attrs = mf.getMainAttributes();
+			return attrs.getValue("Implementation-Version");
+
+		} catch (Exception ex) {
+			ex.printStackTrace(System.err);
+			return ex.toString();
+		}
 	}
 
 	public Stage getOwner() {

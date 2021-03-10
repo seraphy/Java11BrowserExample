@@ -23,6 +23,24 @@
 					<release>11</release>
 				</configuration>
 			</plugin>
+			<!-- https://mvnrepository.com/artifact/pl.project13.maven/git-commit-id-plugin -->
+			<plugin>
+				<groupId>pl.project13.maven</groupId>
+				<artifactId>git-commit-id-plugin</artifactId>
+				<version>4.0.3</version>
+				<executions>
+					<execution>
+						<id>get-the-git-infos</id>
+						<goals>
+							<goal>revision</goal>
+						</goals>
+						<phase>initialize</phase>
+					</execution>
+				</executions>
+				<configuration>
+					<failOnNoGitDirectory>false</failOnNoGitDirectory>
+				</configuration>
+			</plugin>
 			<!-- JAR -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -37,6 +55,12 @@
 							<!-- モジュール時、クラスパスの実行可能jar時のいずれの場合でもエントリポイントとなる -->
 							<mainClass>${main.class}</mainClass>
 						</manifest>
+						<manifestEntries>
+							<Implementation-Version>${project.version} ${git.commit.id.abbrev}</Implementation-Version>
+							<Implementation-Vendor><![CDATA[seraphyware]]></Implementation-Vendor>
+							<Build-SCM-Information>commit: ${git.commit.id.abbrev} branch: ${git.branch}</Build-SCM-Information>
+							<Build-At>${git.build.time}</Build-At>
+						</manifestEntries>
 					</archive>
 				</configuration>
 			</plugin>
