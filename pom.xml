@@ -15,6 +15,20 @@
 
 	<build>
 		<plugins>
+			<!-- osの種類を検出する -->
+			<plugin>
+				<groupId>kr.motd.maven</groupId>
+				<artifactId>os-maven-plugin</artifactId>
+				<version>1.7.0</version>
+				<executions>
+					<execution>
+						<phase>initialize</phase>
+						<goals>
+							<goal>detect</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.1</version>
@@ -122,8 +136,8 @@
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>3.0.0</version>
 				<executions>
-					<!--
 					<execution>
+						<!-- openjfxの依存jarのうち、空のxxxEmptyモジュールについて不要につき削除する -->
 						<id>copy-dependencies</id>
 						<phase>prepare-package</phase>
 						<goals>
@@ -142,7 +156,6 @@
 							</target>
 						</configuration>
 					</execution>
-					 -->
 					<execution>
 						<!-- 明示的にjlinkを起動してモジュールを含むランタイムを生成する。
 						mavenのjlinkプラグインでは、openjfxの生成するxxxxEmptyという自動モジュールも依存関係として
@@ -155,7 +168,7 @@
 						</goals>
 						<configuration>
 							<target>
-								<delete dir="${releasedir}" />
+								<delete dir="${releasedir}.${os.detected.name}" />
 								<exec executable="${java.home}/bin/jlink" failonerror="true">
 									<arg value="--module-path" />
 									<arg value="${project.build.directory}/mods"/>
@@ -165,7 +178,7 @@
 									<arg value="--no-header-files" />
 									<arg value="--verbose" />
 									<arg value="--output" />
-									<arg value="${releasedir}" />
+									<arg value="${releasedir}.${os.detected.name}" />
 									<arg value="--launcher" />
 									<arg value="${main.module}=${main.module}" />
 								</exec>
