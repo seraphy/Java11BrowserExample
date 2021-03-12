@@ -10,6 +10,9 @@ import java.util.ResourceBundle;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -27,6 +30,8 @@ import javafx.stage.Stage;
  * WebViewをコンテンツとして持つウィンドウクラス
  */
 public class Java11BrowserWnd implements Initializable {
+
+	private static final Logger logger = LoggerFactory.getLogger(Java11BrowserWnd.class);
 
 	/**
 	 * ウィンドウの開閉回数を通知するためのインターフェイス
@@ -99,38 +104,49 @@ public class Java11BrowserWnd implements Initializable {
 	 * (jarまたはfileのいずれの場所にあっても取得可能である。)
 	 * @param cls クラス
 	 * @return 魔にフェススト
-	 * @throws IOException
 	 */
-	private static Manifest loadManifest(Class<?> cls) throws IOException {
+	private static Manifest loadManifest(Class<?> cls) {
 		// このクラスを格納しているjarの中のMANIFESTファイルを読み取る
 		URL res = cls.getResource(cls.getSimpleName() + ".class");
 		String s = res.toString();
-		res = new URL(s.substring(0, s.length() - (cls.getName() + ".class").length()) + "META-INF/MANIFEST.MF");
-		System.out.println("MANIFEST-URL=" + res);
+		try {
+			res = new URL(s.substring(0, s.length() - (cls.getName() + ".class").length()) + "META-INF/MANIFEST.MF");
+		} catch (IOException ex) {
+			throw new UncheckedIOException(ex);
+		}
+		logger.info("MANIFEST-URL=" + res);
 
 		Manifest mf = new Manifest();
-		try (InputStream is = res.openStream()) {
+		try (InputStream is = res.openStream()) { // 開くまで実在するか分からないため事前チェックはできない
 			mf.read(is);
+
+		} catch (IOException ex) {
+			logger.warn("failed to read {}", res, ex);
 		}
 
 		Attributes attrs = mf.getMainAttributes();
 		for (Map.Entry<Object, Object> entry : attrs.entrySet()) {
-			System.out.println(entry);
+			logger.info(">" + entry);
 		}
 
 		return mf;
 	}
 
+	/**
+	 * 実装バージョンを取得する。存在しない場合はdevelopを返す。
+	 * @return
+	 */
 	private String getImplementationVersion() {
 		try {
 			Manifest mf = loadManifest(getClass());
 
 			// マニフェストの実装バージョンの取得
 			Attributes attrs = mf.getMainAttributes();
-			return attrs.getValue("Implementation-Version");
+			String implVersion = attrs.getValue("Implementation-Version");
+			return implVersion == null ? "develop" : implVersion;
 
 		} catch (Exception ex) {
-			ex.printStackTrace(System.err);
+			logger.error("failed to get implementation-version", ex);
 			return ex.toString();
 		}
 	}
@@ -181,7 +197,7 @@ public class Java11BrowserWnd implements Initializable {
 	}
 
 	public void load(String url) {
-		System.out.println("url=" + url);
+		logger.info("url=" + url);
 		txtUrl.setText(url);
 		engine.load(url);
 	}
