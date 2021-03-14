@@ -173,12 +173,14 @@
 									<arg value="--module-path" />
 									<arg value="${project.build.directory}/mods"/>
 									<arg value="--add-modules" />
-									<!-- slf4jのlogback実装は静的依存解析では利用を検知できないため明示的に指定する。
-									java.namingはlogbackが内部で使っているため、これも追加しておく -->
-									<arg value="${main.module},ch.qos.logback.classic,ch.qos.logback.core,java.naming" />
+									<arg value="${main.module}" />
+									<!-- slf4jのlogback実装はサービスプロバイダなので bind-services
+									により依存関係を検索する -->
+									<arg value="--bind-services"/>
 									<arg value="--no-man-pages" />
 									<arg value="--no-header-files" />
 									<arg value="--verbose" />
+									<arg value="--compress=2"/>
 									<arg value="--output" />
 									<arg value="${releasedir}.${os.detected.name}" />
 									<arg value="--launcher" />
