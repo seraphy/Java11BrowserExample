@@ -121,6 +121,9 @@
 				<configuration>
 					<executable>${java.home}/bin/java</executable>
 					<arguments>
+						<!-- controlsfxから内部クラスへのアクセスのため -->
+						<argument>--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls</argument>
+						<argument>--add-exports=javafx.controls/com.sun.javafx.scene.control.behavior=org.controlsfx.controls</argument>
 						<!-- WebViewのhttps通信時のJava11のバグのため -->
 						<argument>-Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2</argument>
 						<argument>-p</argument>
@@ -226,6 +229,13 @@
 			<!-- 2021/3/12現在、alpha5があるが、こちらはmodule-infoに不足があり動かない。
 				https://jira.qos.ch/browse/LOGBACK-1491 -->
 			<version>1.3.0-alpha4</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.controlsfx/controlsfx -->
+		<dependency>
+			<groupId>org.controlsfx</groupId>
+			<artifactId>controlsfx</artifactId>
+			<version>11.1.0</version>
 		</dependency>
 	</dependencies>
 </project>

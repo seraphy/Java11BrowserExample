@@ -4,15 +4,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.TreeMap;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
+import org.controlsfx.control.spreadsheet.GridBase;
+import org.controlsfx.control.spreadsheet.SpreadsheetCell;
+import org.controlsfx.control.spreadsheet.SpreadsheetCellType;
+import org.controlsfx.control.spreadsheet.SpreadsheetView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -20,6 +28,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.StackPane;
 import javafx.scene.control.TextField;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -211,5 +220,59 @@ public class Java11BrowserWnd implements Initializable {
 	protected void onBrowse() {
 		String url = txtUrl.getText();
 		engine.load(url);
+	}
+	
+	@FXML
+	protected void onShowPreferences() {
+		try {
+			TreeMap<String, String> sysProps = new TreeMap<>();
+			for (String name : System.getProperties().stringPropertyNames()) {
+				String value = System.getProperty(name);
+				sysProps.put(name, value);
+			}
+			
+		    double defaultWidth = 200;
+		    GridBase grid = new GridBase(sysProps.size(), 2);
+
+	        ObservableList<ObservableList<SpreadsheetCell>> rows = FXCollections.observableArrayList();
+	        int row = 0;
+	        for (Map.Entry<String, String> entry : sysProps.entrySet()) {
+	        	String name = entry.getKey();
+	        	String value = entry.getValue();
+	
+                SpreadsheetCell nameCell = SpreadsheetCellType.STRING.createCell(row, 0, 1, 1, name);
+                SpreadsheetCell valueCell = SpreadsheetCellType.STRING.createCell(row, 1, 1, 1, value);
+
+                ObservableList<SpreadsheetCell> cells = FXCollections.observableArrayList();
+                cells.addAll(nameCell, valueCell);
+	            
+                rows.add(cells);
+	        	row++;
+	        }
+	        grid.setRows(rows);
+
+	        List<String> columnHeaders = grid.getColumnHeaders();
+	        columnHeaders.add("name");
+	        columnHeaders.add("value");
+
+	        SpreadsheetView sheet = new SpreadsheetView(grid);
+	        sheet.getColumns().stream().filter((column) -> (column.isColumnFixable())).forEach((column) -> {
+	            column.setPrefWidth(defaultWidth);
+	        });
+
+	        StackPane root = new StackPane();
+	        root.getChildren().add(sheet);
+	
+	        Scene scene = new Scene(root, 400, 400);
+
+	        Stage childStage = new Stage();
+	        childStage.setTitle("System Properties");
+	        childStage.setScene(scene);
+	        childStage.initOwner(stg);
+	        childStage.showAndWait();
+
+		} catch (Throwable ex) {
+			ErrorDialogUtils.showException(stg, ex);
+		}
 	}
 }

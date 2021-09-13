@@ -5,6 +5,8 @@ module java11browser {
     requires transitive javafx.web;
 
     requires org.slf4j;
+    
+	requires transitive org.controlsfx.controls;
 
     // FXMLLoaderがリフレクションを使うためにopensする必要がある
     opens jp.seraphyware.example;
