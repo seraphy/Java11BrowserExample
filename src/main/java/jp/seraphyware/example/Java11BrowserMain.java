@@ -1,6 +1,7 @@
 package jp.seraphyware.example;
 
 import javafx.application.Application;
+import jp.seraphyware.example.ui.Java11BrowserApp;
 
 public class Java11BrowserMain {
 

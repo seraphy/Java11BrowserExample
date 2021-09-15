@@ -10,7 +10,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.module>java11browser</main.module>
 		<main.class>jp.seraphyware.example.Java11BrowserMain</main.class>
-		<releasedir>target/distribute</releasedir>
+		<exename>java11browser.exe</exename>
 	</properties>
 
 	<build>
@@ -61,6 +61,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.2.0</version>
 				<configuration>
+					<!-- jarは他の依存モジュール(jar)と同じ場所に入れる。(パスの指定が簡単なので) -->
 					<outputDirectory>${project.build.directory}/mods</outputDirectory>
 					<archive>
 						<manifest>
@@ -112,7 +113,8 @@
 					</dependency>
 				</dependencies>
 			</plugin>
-			<!-- Mavenからモジュールとして実行できるようにする。 https://www.mojohaus.org/exec-maven-plugin/examples/example-exec-for-java-programs.html
+			<!-- Mavenからモジュールとして実行できるようにする。 
+				https://www.mojohaus.org/exec-maven-plugin/examples/example-exec-for-java-programs.html
 				mvn package exec:exec -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -121,7 +123,7 @@
 				<configuration>
 					<executable>${java.home}/bin/java</executable>
 					<arguments>
-						<!-- controlsfxから内部クラスへのアクセスのため -->
+						<!-- controlsfxから内部クラスへのアクセスのため(モジュールとして使う場合に必要) -->
 						<argument>--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls</argument>
 						<argument>--add-exports=javafx.controls/com.sun.javafx.scene.control.behavior=org.controlsfx.controls</argument>
 						<!-- WebViewのhttps通信時のJava11のバグのため -->
@@ -159,37 +161,46 @@
 							</target>
 						</configuration>
 					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<!-- Launch4jによるjarファイルのexe化を行う. http://launch4j.sourceforge.net/docs.html -->
+				<groupId>com.akathist.maven.plugins.launch4j</groupId>
+				<artifactId>launch4j-maven-plugin</artifactId>
+				<version>1.7.25</version>
+				<executions>
 					<execution>
-						<!-- 明示的にjlinkを起動してモジュールを含むランタイムを生成する。
-						mavenのjlinkプラグインでは、openjfxの生成するxxxxEmptyという自動モジュールも依存関係として
-						認識してしまい、「jlinkでは自動モジュールは使用できません」というエラーになる。
-						-->
-						<id>jlink</id>
+						<id>l4j-gui</id>
 						<phase>package</phase>
 						<goals>
-							<goal>run</goal>
+							<goal>launch4j</goal>
 						</goals>
 						<configuration>
-							<target>
-								<delete dir="${releasedir}.${os.detected.name}" />
-								<exec executable="${java.home}/bin/jlink" failonerror="true">
-									<arg value="--module-path" />
-									<arg value="${project.build.directory}/mods"/>
-									<arg value="--add-modules" />
-									<arg value="${main.module}" />
-									<!-- slf4jのlogback実装はサービスプロバイダなので bind-services
-									により依存関係を検索する -->
-									<arg value="--bind-services"/>
-									<arg value="--no-man-pages" />
-									<arg value="--no-header-files" />
-									<arg value="--verbose" />
-									<arg value="--compress=2"/>
-									<arg value="--output" />
-									<arg value="${releasedir}.${os.detected.name}" />
-									<arg value="--launcher" />
-									<arg value="${main.module}=${main.module}" />
-								</exec>
-							</target>
+							<headerType>gui</headerType>
+							<outfile>target/mods/${exename}</outfile>
+							<jar>target/mods/${project.build.finalName}.jar</jar>
+							<errTitle>Failed to execute the ${project.artifactId}</errTitle>
+							<!-- <icon>java11browser.ico</icon>  -->
+							<!-- JAVA_HOMEを検索・指定するためカスタムヘッドを利用する -->
+							<objs>
+								<obj>src/Launch4JStub/w32api/crt2.o</obj>
+								<obj>src/Launch4JStub/head/head.o</obj>
+								<obj>src/Launch4JStub/head/guihead.o</obj>
+							</objs>
+							<libs>
+								<lib>src/Launch4jStub/w32api/libmingw32.a</lib>
+								<lib>src/Launch4jStub/w32api/libgcc.a</lib>
+								<lib>src/Launch4jStub/w32api/libmsvcrt.a</lib>
+								<lib>src/Launch4jStub/w32api/libkernel32.a</lib>
+								<lib>src/Launch4jStub/w32api/libuser32.a</lib>
+								<lib>src/Launch4jStub/w32api/libadvapi32.a</lib>
+								<lib>src/Launch4jStub/w32api/libshell32.a</lib>
+								<lib>src/Launch4jStub/w32api/libshfolder.a</lib>
+							</libs>
+							<jre>
+								<path>jre</path>
+								<minVersion>11.0</minVersion>
+							</jre>
 						</configuration>
 					</execution>
 				</executions>
@@ -216,6 +227,7 @@
 			<artifactId>javafx-web</artifactId>
 			<version>15.0.1</version>
 		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -231,11 +243,22 @@
 			<version>1.3.0-alpha4</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.controlsfx/controlsfx -->
+		<!-- https://mvnrepository.com/artifact/org.controlsfx/controlsfx
+		 javafx13以降であれば、java9でshpreadsheetなどで使うjavafx内部クラスへのアクセスができなくなっていたものが再度できるようになっている。
+		 ただし、moduleとして使う場合には、起動時に add-exports で内部アクセスを許可する必要がある。クラスパスによる実行であればjava8時台とかわらない。
+		-->
 		<dependency>
 			<groupId>org.controlsfx</groupId>
 			<artifactId>controlsfx</artifactId>
 			<version>11.1.0</version>
 		</dependency>
+
+		<!-- CDIのリファレンス実装 https://mvnrepository.com/artifact/org.jboss.weld.se/weld-se-shaded -->
+		<dependency>
+			<groupId>org.jboss.weld.se</groupId>
+			<artifactId>weld-se-shaded</artifactId>
+			<version>4.0.2.Final</version>
+		</dependency>
+
 	</dependencies>
 </project>

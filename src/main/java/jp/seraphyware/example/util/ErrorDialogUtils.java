@@ -1,4 +1,4 @@
-package jp.seraphyware.example;
+package jp.seraphyware.example.util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -12,6 +12,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.Window;
 
+/**
+ * エラーダイアログを表示するユーテリティ
+ */
 public final class ErrorDialogUtils {
 
 	private ErrorDialogUtils() {
