@@ -56,7 +56,7 @@ public abstract class AbstractWindowController extends AbstractDocumentControlle
 	 * デフォルトコンストラクタ
 	 */
 	protected AbstractWindowController() {
-		this(null, true);
+		this(null, true);	
 	}
 
 	/**

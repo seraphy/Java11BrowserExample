@@ -13,6 +13,7 @@ import jakarta.enterprise.inject.spi.CDI;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
+import jp.seraphyware.example.util.ErrorDialogUtils;
 
 /**
  * JavaFXのライフサイクルを管理する。
@@ -50,10 +51,19 @@ public class Java11BrowserApp extends Application {
 	 */
 	@Override
 	public void start(Stage primaryStage) throws Exception {
+		assert Platform.isFxApplicationThread();
 		logger.info("**START**");
 		try {
+			// JavaFXスレッドで補足されていない例外が到達したらエラー表示する
+			Thread.currentThread().setUncaughtExceptionHandler((t, ex) -> {
+				logger.error("An uncaughted exception was occured.", ex);
+				ErrorDialogUtils.showException(null, ex);
+			});
+
+			// CDIコンテナ起動
 			weldContainer = weld.initialize();
 
+			// 最初のウィンドウをオープンする
 			Java11BrowserWnd wnd = createWindow(null);
 			String url = getClass().getResource("/html/index.html").toString();
 			wnd.load(url);

@@ -44,6 +44,7 @@ import javafx.stage.WindowEvent;
 import jp.seraphyware.example.util.AbstractWindowController;
 import jp.seraphyware.example.util.CDIFXMLLoader;
 import jp.seraphyware.example.util.ErrorDialogUtils;
+import jp.seraphyware.example.util.ManifestHelper;
 import jp.seraphyware.example.util.MessageResource;
 
 /**
@@ -70,6 +71,12 @@ public class Java11BrowserWnd extends AbstractWindowController implements Initia
 	@MessageResource
 	private ResourceBundle resources;
 
+	private final ObjectProperty<Function<Java11BrowserWnd, Java11BrowserWnd>> createChildCallback = new SimpleObjectProperty<>();
+
+	public ObjectProperty<Function<Java11BrowserWnd, Java11BrowserWnd>> createChildCallback() {
+		return createChildCallback;
+	}
+
 	@Override
 	protected void makeRoot() {
 		FXMLLoader ldr = ldrProvider.get();
@@ -90,7 +97,9 @@ public class Java11BrowserWnd extends AbstractWindowController implements Initia
 	protected Stage createStage() {
 		Stage stg = super.createStage();
 		stg.initModality(Modality.WINDOW_MODAL);
-		String title = resources.getString("window.title") + "@" + getImplementationVersion(); //$NON-NLS-1$
+		String implementsVersion = ManifestHelper.getImplementationVersion();
+		String moduleName = getClass().getModule().getName();
+		String title = resources.getString("window.title") + "@" + moduleName + "/" + implementsVersion; //$NON-NLS-1$
 		stg.setTitle(title);
 		return stg;
 	}
@@ -100,63 +109,6 @@ public class Java11BrowserWnd extends AbstractWindowController implements Initia
 		onClose();
 	}
 	
-	/**
-	 * 指定したクラスを保持しているMETA-INF/MANIFEST.MF情報を取得する。
-	 * (jarまたはfileのいずれの場所にあっても取得可能である。)
-	 * @param cls クラス
-	 * @return 魔にフェススト
-	 */
-	private static Manifest loadManifest(Class<?> cls) {
-		// このクラスを格納しているjarの中のMANIFESTファイルを読み取る
-		URL res = cls.getResource(cls.getSimpleName() + ".class");
-		String s = res.toString();
-		try {
-			res = new URL(s.substring(0, s.length() - (cls.getName() + ".class").length()) + "META-INF/MANIFEST.MF");
-		} catch (IOException ex) {
-			throw new UncheckedIOException(ex);
-		}
-		logger.info("MANIFEST-URL=" + res);
-
-		Manifest mf = new Manifest();
-		try (InputStream is = res.openStream()) { // 開くまで実在するか分からないため事前チェックはできない
-			mf.read(is);
-
-		} catch (IOException ex) {
-			logger.warn("failed to read {}", res, ex);
-		}
-
-		Attributes attrs = mf.getMainAttributes();
-		for (Map.Entry<Object, Object> entry : attrs.entrySet()) {
-			logger.info(">" + entry);
-		}
-
-		return mf;
-	}
-
-	/**
-	 * 実装バージョンを取得する。存在しない場合はdevelopを返す。
-	 * @return
-	 */
-	private String getImplementationVersion() {
-		try {
-			Manifest mf = loadManifest(getClass());
-
-			// マニフェストの実装バージョンの取得
-			Attributes attrs = mf.getMainAttributes();
-			String implVersion = attrs.getValue("Implementation-Version");
-			return implVersion == null ? "develop" : implVersion;
-
-		} catch (Exception ex) {
-			logger.error("failed to get implementation-version", ex);
-			return ex.toString();
-		}
-	}
-	
-	private final ObjectProperty<Function<Java11BrowserWnd, Java11BrowserWnd>> createChildCallback = new SimpleObjectProperty<>();
-
-	public ObjectProperty<Function<Java11BrowserWnd, Java11BrowserWnd>> createChildCallback() {
-		return createChildCallback;
-	}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -209,57 +161,21 @@ public class Java11BrowserWnd extends AbstractWindowController implements Initia
 		engine.load(url);
 	}
 	
+	@Inject
+	private Instance<SysPropsWnd> sysPropsWndProv;
+	
 	@FXML
 	protected void onShowPreferences() {
+		SysPropsWnd wnd = sysPropsWndProv.get();
 		try {
-			TreeMap<String, String> sysProps = new TreeMap<>();
-			for (String name : System.getProperties().stringPropertyNames()) {
-				String value = System.getProperty(name);
-				sysProps.put(name, value);
-			}
-			
-		    double defaultWidth = 200;
-		    GridBase grid = new GridBase(sysProps.size(), 2);
-
-	        ObservableList<ObservableList<SpreadsheetCell>> rows = FXCollections.observableArrayList();
-	        int row = 0;
-	        for (Map.Entry<String, String> entry : sysProps.entrySet()) {
-	        	String name = entry.getKey();
-	        	String value = entry.getValue();
-	
-                SpreadsheetCell nameCell = SpreadsheetCellType.STRING.createCell(row, 0, 1, 1, name);
-                SpreadsheetCell valueCell = SpreadsheetCellType.STRING.createCell(row, 1, 1, 1, value);
-
-                ObservableList<SpreadsheetCell> cells = FXCollections.observableArrayList();
-                cells.addAll(nameCell, valueCell);
-	            
-                rows.add(cells);
-	        	row++;
-	        }
-	        grid.setRows(rows);
-
-	        List<String> columnHeaders = grid.getColumnHeaders();
-	        columnHeaders.add("name");
-	        columnHeaders.add("value");
-
-	        SpreadsheetView sheet = new SpreadsheetView(grid);
-	        sheet.getColumns().stream().filter((column) -> (column.isColumnFixable())).forEach((column) -> {
-	            column.setPrefWidth(defaultWidth);
-	        });
-
-	        StackPane root = new StackPane();
-	        root.getChildren().add(sheet);
-	
-	        Scene scene = new Scene(root, 400, 400);
-
-	        Stage childStage = new Stage();
-	        childStage.setTitle("System Properties");
-	        childStage.setScene(scene);
-	        childStage.initOwner(getStage());
-	        childStage.showAndWait();
-
-		} catch (Throwable ex) {
+			wnd.setOwner(getStage());
+			wnd.showAndWait();
+		
+		} catch (Exception ex) {
 			ErrorDialogUtils.showException(getStage(), ex);
+
+		} finally {
+			sysPropsWndProv.destroy(wnd);
 		}
 	}
 }
