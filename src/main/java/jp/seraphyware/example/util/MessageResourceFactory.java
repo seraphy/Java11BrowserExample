@@ -2,8 +2,10 @@ package jp.seraphyware.example.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -23,12 +25,26 @@ public class MessageResourceFactory {
 
 	private static final Logger logger = LoggerFactory.getLogger(MessageResourceFactory.class);
 	
+	private Map<String, ResourceBundle> cachedBundles = new HashMap<>();
+	
 	@Produces
 	@MessageResource
 	@Dependent
 	public ResourceBundle getMessages(InjectionPoint ip) {
 		MessageResource prefixAnnt = ip.getAnnotated().getAnnotation(MessageResource.class);
 		String resName = prefixAnnt.value();
+
+		// リソースバンドルは一度読み込まれたら変更されない性質なのでキャッシュしておく
+		return cachedBundles.computeIfAbsent(resName, this::loadResourceBundle);
+	}
+	
+	/**
+	 * リソースバンドルをロードする
+	 * @param resName
+	 * @return
+	 */
+	private ResourceBundle loadResourceBundle(String resName) {
+		logger.info("load resourcebundle: {}", resName);
 		
 		if (resName.endsWith(".xml")) {
 			// xml形式でのロード
