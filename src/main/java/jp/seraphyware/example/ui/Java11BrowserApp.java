@@ -1,5 +1,9 @@
 package jp.seraphyware.example.ui;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jboss.weld.environment.se.Weld;
@@ -14,6 +18,9 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import jp.seraphyware.example.util.ErrorDialogUtils;
+import jp.seraphyware.example.util.ManifestHelper;
+import jp.seraphyware.example.util.MemorySchemeURLStreamHandlerFactory;
+import jp.seraphyware.example.util.MemorySchemeURLStreamHandlerFactory.ContentsBody;
 
 /**
  * JavaFXのライフサイクルを管理する。
@@ -43,6 +50,30 @@ public class Java11BrowserApp extends Application {
 	 */
 	@Override
 	public void init() {
+		// メモリ上のURL「memoryプロトコル」を使えるようにする
+		URL.setURLStreamHandlerFactory(MemorySchemeURLStreamHandlerFactory.getInstance());
+		
+		// 動的にシステム情報を表示するメモリプロトコル(診断・実験用)
+		try {
+			MemorySchemeURLStreamHandlerFactory.getInstance().putContents(new URI("memory:manifest"),
+					new ContentsBody() {
+						@Override
+						public byte[] getBytes() {
+							return ManifestHelper.toString(ManifestHelper.loadManifest(Java11BrowserApp.class))
+									.getBytes(StandardCharsets.UTF_8);
+						}
+
+						@Override
+						public String getContentType() {
+							return "text/plain";
+						}
+					});
+
+		} catch (URISyntaxException ex) {
+			throw new RuntimeException(ex);
+		}
+
+		// CDI準備
 		weld = new Weld();
 	}
 

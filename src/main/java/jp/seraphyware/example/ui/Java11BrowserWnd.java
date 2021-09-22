@@ -178,4 +178,9 @@ public class Java11BrowserWnd extends AbstractWindowController implements Initia
 			sysPropsWndProv.destroy(wnd);
 		}
 	}
+	
+	@FXML
+	protected void onFontSetting() {
+		
+	}
 }

@@ -23,7 +23,7 @@ public abstract class AbstractWindowController extends AbstractDocumentControlle
 	 * デフォルトフォント
 	 */
 	private static Font defaultFont;
-
+	
 	/**
 	 * 親ウィンドウ、null可
 	 */
