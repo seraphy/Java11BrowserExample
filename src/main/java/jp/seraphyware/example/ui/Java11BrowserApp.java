@@ -17,6 +17,7 @@ import jakarta.enterprise.inject.spi.CDI;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
+import jp.seraphyware.example.util.DataSchemeURLStreamHandlerFactory;
 import jp.seraphyware.example.util.ErrorDialogUtils;
 import jp.seraphyware.example.util.ManifestHelper;
 import jp.seraphyware.example.util.MemorySchemeURLStreamHandlerFactory;
@@ -51,7 +52,8 @@ public class Java11BrowserApp extends Application {
 	@Override
 	public void init() {
 		// メモリ上のURL「memoryプロトコル」を使えるようにする
-		URL.setURLStreamHandlerFactory(MemorySchemeURLStreamHandlerFactory.getInstance());
+		URL.setURLStreamHandlerFactory(
+				new DataSchemeURLStreamHandlerFactory(MemorySchemeURLStreamHandlerFactory.getInstance()));
 		
 		// 動的にシステム情報を表示するメモリプロトコル(診断・実験用)
 		try {

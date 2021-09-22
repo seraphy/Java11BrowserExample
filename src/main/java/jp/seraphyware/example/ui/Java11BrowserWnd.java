@@ -6,6 +6,7 @@ import java.io.UncheckedIOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -20,6 +21,7 @@ import org.controlsfx.control.spreadsheet.GridBase;
 import org.controlsfx.control.spreadsheet.SpreadsheetCell;
 import org.controlsfx.control.spreadsheet.SpreadsheetCellType;
 import org.controlsfx.control.spreadsheet.SpreadsheetView;
+import org.controlsfx.dialog.FontSelectorDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +37,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Font;
 import javafx.scene.control.TextField;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -46,6 +49,7 @@ import jp.seraphyware.example.util.CDIFXMLLoader;
 import jp.seraphyware.example.util.ErrorDialogUtils;
 import jp.seraphyware.example.util.ManifestHelper;
 import jp.seraphyware.example.util.MessageResource;
+import jp.seraphyware.example.util.WebFontStyleSheetGenerator;
 
 /**
  * WebViewをコンテンツとして持つウィンドウクラス
@@ -55,6 +59,8 @@ public class Java11BrowserWnd extends AbstractWindowController implements Initia
 
 	private static final Logger logger = LoggerFactory.getLogger(Java11BrowserWnd.class);
 
+	private static final WebFontStyleSheetGenerator webFontCssGenerator = new WebFontStyleSheetGenerator();
+	
 	@FXML
 	private TextField txtUrl;
 
@@ -142,6 +148,8 @@ public class Java11BrowserWnd extends AbstractWindowController implements Initia
 		engine.locationProperty().addListener((self, old, value) -> {
 			txtUrl.setText(value);
 		});
+		
+		webFontCssGenerator.applyStyleSheet(engine, getDefaultFont());
 	}
 
 	public void load(String url) {
@@ -181,6 +189,18 @@ public class Java11BrowserWnd extends AbstractWindowController implements Initia
 	
 	@FXML
 	protected void onFontSetting() {
-		
+		Font defaultFont = getDefaultFont();
+		FontSelectorDialog fontDlg = new FontSelectorDialog(defaultFont);
+		Optional<Font> result = fontDlg.showAndWait();
+		if (result.isPresent()) {
+			defaultFont = result.get();
+			setDefaultFont(defaultFont);
+
+			// 既存のスタイルを一旦消す
+			Scene scene = getScene();
+			scene.getStylesheets().clear();
+			AbstractWindowController.applyStyleSheet(scene);
+			webFontCssGenerator.applyStyleSheet(engine, getDefaultFont());
+		}
 	}
 }

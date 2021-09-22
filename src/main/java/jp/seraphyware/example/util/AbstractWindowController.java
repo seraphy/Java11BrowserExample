@@ -17,7 +17,7 @@ public abstract class AbstractWindowController extends AbstractDocumentControlle
 	/**
 	 * デフォルトフォントのCSSのジェネレータ
 	 */
-	private static final FontStyleSheetGenerator fontStyleGen = new FontStyleSheetGenerator();
+	private static final SceneFontStyleSheetGenerator fontStyleGen = new SceneFontStyleSheetGenerator();
 
 	/**
 	 * デフォルトフォント

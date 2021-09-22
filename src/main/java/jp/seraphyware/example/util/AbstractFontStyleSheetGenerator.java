@@ -20,65 +20,16 @@ import javafx.scene.text.FontWeight;
 
 /**
  * フォントのスタイルシートを生成する.<br>
- * Sceneに対して生成したスタイルシートを適用する実装は派生クラスで行う.<br>
+ * 生成したスタイルシートを適用する実装は派生クラスで行う.<br>
  */
 public abstract class AbstractFontStyleSheetGenerator {
 
-	/**
-	 * デフォルトのスタイルシートのテンプレートの格納先
-	 */
-	private static final String DEFAULT_CSS_TEMPLATE = "/styles.css.tmpl";
-
-	/**
-	 * CSSの生成に使ったフォント、まだ生成されていなればnull
-	 */
-	private Font generatedCssFont;
-
-	/**
-	 * 生成されたCSS、まだ生成されていなければnull
-	 */
-	private String generatedCss;
-
-	/**
-	 * シーンに対してフォントのルート設定されたCSSを追加適用します.<br>
-	 * (すでに適用されている場合は呼び出し元で削除する必要があります。)<br>
-	 * @param scene
-	 * @param font
-	 */
-	public void applyStyleSheet(Scene scene, Font font) {
-		URL cssPath = getCssURL();
-		if (generatedCssFont == null || !generatedCssFont.equals(font)) {
-			generatedCss = generateCss(font);
-			putContents(cssPath, generatedCss);
-			generatedCssFont = font;
-		}
-
-		if (generatedCss != null && generatedCss.length() > 0) {
-			scene.getStylesheets().add(cssPath.toExternalForm());
-		}
-	}
-	
-	/**
-	 * CSSを格納するURLを取得する。
-	 * @return
-	 */
-	protected abstract URL getCssURL();
-	
-	/**
-	 * 指定したURLにCSSテキストを設定する
-	 * @param url
-	 * @param contents
-	 */
-	protected abstract void putContents(URL url, String contents);
-	
 	/**
 	 * CSSテンプレートを読む
 	 * @return
 	 * @throws IOException
 	 */
-	protected InputStream getInputCssTemplate() throws IOException {
-		return AbstractWindowController.class.getResourceAsStream(DEFAULT_CSS_TEMPLATE);
-	}
+	protected abstract InputStream getInputCssTemplate() throws IOException;
 
 	public static class FontInfo {
 
@@ -165,7 +116,7 @@ public abstract class AbstractFontStyleSheetGenerator {
 	 * @param font フォント
 	 * @return 生成されたCSS
 	 */
-	private String generateCss(Font font) {
+	public String generateCss(Font font) {
 		if (font == null) {
 			return null;
 		}

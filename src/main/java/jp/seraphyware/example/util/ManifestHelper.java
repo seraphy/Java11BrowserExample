@@ -38,16 +38,16 @@ public class ManifestHelper {
 		// このクラスのクラスファイルがある位置を求める
 		URL clsLocation = cls.getResource(cls.getSimpleName() + ".class");
 		if (clsLocation == null) {
-			throw new IllegalArgumentException("クラス名からクラスファイルがわかりません。" + cls.getSimpleName());
+			throw new IllegalArgumentException("クラス名からクラスファイルがわかりません。(インナークラスかも？)" + cls.getSimpleName());
 		}
 		// このクラスを格納しているjarの中のMANIFESTファイルの位置を特定する
 		String s = clsLocation.toString();
 		String manifestLocationStr = s.substring(0, s.length() - (cls.getName() + ".class").length()) + "META-INF/MANIFEST.MF";
-		logger.info("MANIFEST-URL=" + manifestLocationStr);
 
 		return manifestMap.computeIfAbsent(manifestLocationStr, uri -> {
 			Manifest mf = new Manifest();
 			try {
+				logger.info("load MANIFEST-URL=" + manifestLocationStr);
 				URL res = new URL(manifestLocationStr);
 				try (InputStream is = res.openStream()) { // 開くまで実在するか分からないため事前チェックはできない
 					mf.read(is);
