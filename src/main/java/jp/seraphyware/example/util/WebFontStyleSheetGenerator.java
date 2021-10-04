@@ -2,6 +2,7 @@ package jp.seraphyware.example.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -19,7 +20,7 @@ import javafx.scene.web.WebEngine;
  * 予め、{@link DataSchemeURLStreamHandlerFactory}をURLのストリームハンドラファクトリとして設定しておく必要がある。<br>
  * @see DataSchemeURLStreamHandlerFactory
  */
-public class WebFontStyleSheetGenerator extends AbstractFontStyleSheetGenerator {
+public class WebFontStyleSheetGenerator extends FontStyleSheetGenerator {
 
 	/**
 	 * デフォルトのスタイルシートのテンプレートの格納先
@@ -36,7 +37,6 @@ public class WebFontStyleSheetGenerator extends AbstractFontStyleSheetGenerator 
 	 */
 	private String generatedCss;
 
-	@Override
 	protected InputStream getInputCssTemplate() throws IOException {
 		return AbstractWindowController.class.getResourceAsStream(DEFAULT_CSS_TEMPLATE);
 	}
@@ -49,8 +49,13 @@ public class WebFontStyleSheetGenerator extends AbstractFontStyleSheetGenerator 
 	 */
 	public void applyStyleSheet(WebEngine engine, Font font) {
 		if (generatedCssFont == null || !generatedCssFont.equals(font)) {
-			generatedCss = generateCss(font);
-			generatedCssFont = font;
+			try {
+				generatedCss = generateCss(font, getInputCssTemplate());
+				generatedCssFont = font;
+
+			} catch (IOException ex) {
+				throw new UncheckedIOException(ex);
+			}
 		}
 
 		if (generatedCss != null && generatedCss.length() > 0) {

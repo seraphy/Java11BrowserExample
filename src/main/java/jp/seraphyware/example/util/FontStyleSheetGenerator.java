@@ -22,14 +22,7 @@ import javafx.scene.text.FontWeight;
  * フォントのスタイルシートを生成する.<br>
  * 生成したスタイルシートを適用する実装は派生クラスで行う.<br>
  */
-public abstract class AbstractFontStyleSheetGenerator {
-
-	/**
-	 * CSSテンプレートを読む
-	 * @return
-	 * @throws IOException
-	 */
-	protected abstract InputStream getInputCssTemplate() throws IOException;
+public class FontStyleSheetGenerator {
 
 	public static class FontInfo {
 
@@ -114,9 +107,10 @@ public abstract class AbstractFontStyleSheetGenerator {
 	/**
 	 * フォントを指定して、対応するCSSテンプレートから適用済みCSSを生成する
 	 * @param font フォント
+	 * @param inp 入力ストリーム
 	 * @return 生成されたCSS
 	 */
-	public String generateCss(Font font) {
+	public String generateCss(Font font, InputStream inp) throws IOException {
 		if (font == null) {
 			return null;
 		}
@@ -130,25 +124,19 @@ public abstract class AbstractFontStyleSheetGenerator {
 		varMap.put("font-weight", Integer.toString(fontInfo.getWeight().getWeight()));
 		varMap.put("font-style", fontInfo.getPosture() == FontPosture.ITALIC ? "italic" : "normal");
 
-		try {
-			InputStream inp = getInputCssTemplate();
-			if (inp != null) {
-				StringWriter wr = new StringWriter();
-				try (InputStreamReader rd = new InputStreamReader(inp, StandardCharsets.UTF_8)) {
-					expand(rd, wr, name -> {
-						return varMap.computeIfAbsent(name, k -> {
-							return System.getProperty(k);
-						});
+		if (inp != null) {
+			StringWriter wr = new StringWriter();
+			try (InputStreamReader rd = new InputStreamReader(inp, StandardCharsets.UTF_8)) {
+				expand(rd, wr, name -> {
+					return varMap.computeIfAbsent(name, k -> {
+						return System.getProperty(k);
 					});
-				}
-
-				return wr.toString();
+				});
 			}
-			return null;
 
-		} catch (IOException ex) {
-			throw new UncheckedIOException(ex);
+			return wr.toString();
 		}
+		return null;
 	}
 
 	/**
@@ -158,7 +146,7 @@ public abstract class AbstractFontStyleSheetGenerator {
 	 * @param resolver
 	 * @throws IOException
 	 */
-	private void expand(Reader rd, Writer wr, Function<String, String> resolver) throws IOException {
+	protected void expand(Reader rd, Writer wr, Function<String, String> resolver) throws IOException {
 		int ch;
 		int mode = 0;
 		StringBuilder nameBuf = new StringBuilder();

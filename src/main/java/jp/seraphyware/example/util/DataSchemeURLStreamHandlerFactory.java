@@ -86,12 +86,12 @@ public class DataSchemeURLStreamHandlerFactory implements URLStreamHandlerFactor
 						// URLエンコード方式(デフォルト)
 						String decoded = URLDecoder.decode(path, StandardCharsets.UTF_8);
 						data = decoded.getBytes(StandardCharsets.UTF_8);
-						logger.info("data url: contentType={}, data={}", contentType, decoded);
+						logger.debug("data url: contentType={}, data={}", contentType, decoded);
 
 					} else if ("base64".equalsIgnoreCase(encoding)) {
 						// base64形式
 						data = Base64.getDecoder().decode(path);
-						logger.info("data url: contentType={}, data.length={}", contentType, data.length);
+						logger.debug("data url: contentType={}, data.length={}", contentType, data.length);
 
 					} else {
 						// 不明な形式
